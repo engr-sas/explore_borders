@@ -227,7 +227,6 @@ bool GenerateLoops::offsetTrue(std::vector<geometry_msgs::Point> outer, std::vec
 	//if offset properly, shortest length should be to same vertice
 	//outer 1, is inner 0
 	if(outer.size() != inner.size()){
-		std::cout<<"Could not check offset; different sizes";
 		return false;
 	}
 	for(int i = 0; i < inner.size(); i++){
@@ -527,7 +526,6 @@ std::vector<geometry_msgs::Point> GenerateLoops::bestPath(std::vector<geometry_m
 			pr++;
 		}
 	}else{
-	std::cout<<"reversed \n";
 		int pr = plan.size() - 1;
 		while(pr > 0){
 			b_plan[pr] = plan[min_start];
@@ -554,8 +552,6 @@ void GenerateLoops::planThread(std::vector<geometry_msgs::Point> rl, std::vector
 	geometry_msgs::Point gp0 = closestPoint(path0, curr_pose, rob_lin_vel, rob_rot_vel);
 	geometry_msgs::Pose center = getCenter(path0);
 	std::vector<geometry_msgs::Point> inner_bound = all_sections[all_sections.size()-1];
-	std::cout<<"all_sections.size(): "<<all_sections.size()<<"\n";
-	std::cout<<"all_walls.size(): "<<all_walls.size()<<"\n";
 	
 	if(nv.size() > 0){
 		ros::spinOnce();
@@ -611,21 +607,7 @@ void GenerateLoops::planThread(std::vector<geometry_msgs::Point> rl, std::vector
 				for(int i1 = 0; i1 < curr_loop.size(); i1++){ loop_sn.push_back(i);} //populate wall sn
 			}
 			
-			//clean up for early inner
-			std::cout<<"first_sq; "<<first_sq<<"\n";
-			std::cout<<"last_sq; "<<last_sq<<"\n";
-			std::cout<<"B4 loop_sn.size(); "<<loop_sn.size()<<"\n";
-			std::cout<<"B4 cur_goal_poses.size(); "<<cur_goal_poses.size()<<"\n";
-			/*for(int l = first_sq; l <= last_sq; l++){
-				if(cur_goal_poses.size() > (last_sq + 1)){
-					for(int m = last_sq + 1; m < cur_goal_poses.size(); m++){
-						if(getLength(cur_goal_poses[m].position, cur_goal_poses[l].position) < sensor_range){
-							cur_goal_poses.erase(cur_goal_poses.begin() + m);
-							loop_sn.erase(loop_sn.begin() + m);
-						}
-					}
-				}
-			}*/		
+			//clean up for early inner	
 			for(int m = last_sq + 1; m < cur_goal_poses.size(); m++){//not square
 				if(cur_goal_poses.size() > (last_sq + 1)){
 					for(int l = first_sq; l <= last_sq; l++){//square points
@@ -691,8 +673,6 @@ void GenerateLoops::planThread(std::vector<geometry_msgs::Point> rl, std::vector
 		
 		global_plan_->poses.resize(cur_goal_poses.size());
 		global_plan_->poses = poseToStamped(cur_goal_poses);
-			std::cout<<"loop_sn.size(); "<<loop_sn.size()<<"\n";
-			std::cout<<"global_plan_->poses.size(); "<<global_plan_->poses.size()<<"\n";
 
 	}else{
 		ROS_INFO("Small Area Exp");
@@ -915,10 +895,6 @@ float GenerateLoops::getRotationTime(geometry_msgs::Quaternion q1, geometry_msgs
 	tf::Matrix3x3 m2(tq2);
 	m1.getRPY(r1, p1, y1);
 	m2.getRPY(r2, p2, y2);
-	std::cout<<"\n \n y1: "<<y1<<"\n";
-	std::cout<<"y2: "<<y2<<"\n";
-	std::cout<<"rotSpeed: "<<rotSpeed<<"\n";
-	std::cout<<"rot time: "<<std::abs((y2 - y1)/rotSpeed)<<"\n";
 	return std::abs((y2 - y1)/rotSpeed);
 }
 

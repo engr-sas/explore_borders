@@ -19,11 +19,6 @@ void costmapCallback(const nav_msgs::OccupancyGrid msg){
 
 void mapCallback(const nav_msgs::OccupancyGrid msg){
 	map_grid = msg;
-	/*if(!objects_map_p->initialized){//todo make internal
-		std::cout<<"subscriber \n";
-		objects_map_p->initialize(map_grid, 0.1);
-		//map_ini = true;
-	}*/
 }
 
 void rvizCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){ 
@@ -98,7 +93,6 @@ int main(int argc, char** argv) {
 	goal_publisher = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 200);
 	boundary_publisher = n.advertise<geometry_msgs::PolygonStamped>("/exp_boundary", 20);
 	ac_poly_pub = n.advertise<geometry_msgs::PolygonStamped>("/active_polygon", 20);
-	cmd_publisher = n.advertise<geometry_msgs::Twist>("cmd_vel", 200);
 	measure_pub = n.advertise<std_msgs::Bool>("odom_total", 50);
 	
 	ros::Rate loop_rate(5);
@@ -307,7 +301,7 @@ bool getOdom(){
 		robot_pose = p_out.pose;
 		double finish_time =ros::Time::now().toSec();
 		if((finish_time - start_time) > 0.05){
-			//std::cout<<"OdomTime: "<<finish_time - start_time<<" \n";
+		
 		}
 		return true;
 }
@@ -334,7 +328,6 @@ void managePlan(){
 	}
 
 	while(exploring){	
-		//g_rest_p->sleep();
 		//ROS_INFO("Exploring \n");
 		if(!start_inside) start_inside = isInside(robot_pose.position, global_vertices);
 		steps = max_steps;
@@ -403,21 +396,10 @@ void managePlan(){
 									erasePlanBefore(i);	
 								}
 								borderCheck(ftr);
-							/*}else{
-								//redundancy to avoid getting stuck (map, odom conflict)
-									std::cout<<"mp 24 \n";
-								goal = findFree(gl_->global_plan.poses[i].pose);
-								setBlindGoal(goal, 2);
-								erasePlanPoint(i);
-							}*/
 						}else{//there is still an obs but not properly id'd
 							removeAroundFeatures(ftr);
 							goal = gl_->global_plan.poses[i].pose;
-							/*if(!obstacleOnMap(goal.position, g_inflation)){
-									if(holdGoalObserve(goal)){
-										erasePlanBefore(i);	
-									}
-							}else */if(!moveCloser(goal, (plan_tol))){
+							if(!moveCloser(goal, (plan_tol))){
 								if((i+2) > gl_->global_plan.poses.size()){
 									setBlindGoal(gl_->global_plan.poses[i+1].pose, 1);
 								}
@@ -439,15 +421,10 @@ void managePlan(){
 					setBlindGoal(gl_->global_plan.poses[steps].pose, 1);
 					std::cout<<"mc didnt !ng";
 				}else if(!featureChecked(ftr)){
-					//if(featureIsInsideArea(ftr)){
 						if(!borderHijack()){
 							erasePlanBefore(steps);
 						}
 						borderCheck(ftr);
-					/*}else{
-						goal = findFree(goal);
-						setBlindGoal(goal, 2);
-					}*/
 
 				}else{
 					removeAroundFeatures(ftr);
@@ -502,26 +479,6 @@ bool moveCloser(geometry_msgs::Pose goal, double target_margin){
 			return true;
 		}
 	}
-	
-	/*double arr_z[] = {-0.2, 0.2, -0.4, 0.4, -0.6, 0.6};
-	int n = sizeof(arr_z)/sizeof(arr_z[0]);
-	std::vector<double> del_z(arr_z, arr_z + n);
-	
-	double goal_len = gl_->getLength(robot_pose.position, goal.position);
-	geometry_msgs::Quaternion straight = gl_->getQuatFromP(robot_pose.position, goal.position);
-	double z_s = getZFromQuat(straight);
-	for(int i = 0; i < del_z.size(); i++){
-		std::cout<<"del_z["<<i<<"]: "<<del_z[i]<<"\n";
-		geometry_msgs::Pose new_goal = robot_pose;
-		new_goal.orientation = straight;
-		new_goal.position.x += goal_len * cos(z_s + del_z[i]); 
-		new_goal.position.y += goal_len * sin(z_s + del_z[i]); 
-		std::cout<<"new_goal: "<<new_goal.position<<"\n";
-		if(!obstacleOnPoint(new_goal.position)){
-			setBlindGoal(new_goal, 1);
-			return true;
-		}
-	}*/
 	
 	return false;
 }
@@ -847,56 +804,6 @@ bool crossedEdges(std::string* dir_p, bool *other_side,
 	return false;
 } 
 
-/*bool continuousObject(std::string dir){
-	ros::spinOnce();
-	std::cout<<"cOb \n";
-	if(dir != "left"  && dir != "right"){
-		ROS_WARN("Direction in wall follow not set.Use 'left' or 'right'");
-		return false;
-	}else{
-		int num_scans = std::floor((scans->angle_max - scans->angle_min) / scans->angle_increment);
-		int start = num_scans / 2; //mid scan
-		//if side is has a continuos obs
-		double group_scans = pi/180; //group every 1 degree
-		int no_in_group = group_scans / scans->angle_increment;
-		std::cout<<"group_scans: "<<group_scans<<"\n";
-		std::cout<<"no_in_group: "<<no_in_group<<"\n";
-		double prev_scan = scans->ranges[start];
-		if(prev_scan > scans->range_max) prev_scan = scans->range_max; //if infinte
-		double ang_margin = 0.77; //45 degree change 
-		double range_diff = (1 - cos(ang_margin + scans->angle_increment)); //range*range_diff = obs changes > ang_margin 
-		std::cout<<"range_diff: "<<range_diff<<"\n";
-		if(num_scans > (no_in_group * 2)){
-			while((start > no_in_group) && (start < (num_scans- no_in_group))){ //scan 45			
-				if(dir == "left") start --;
-				else if(dir == "right") start ++;
-				else break;
-				
-				double curr_scan = 0;
-				for(int i = 0; i < no_in_group; i ++){
-					if(scans->ranges[start + i]  > scans->range_max){
-						curr_scan += scans->range_max; //if infinte
-					}else curr_scan += scans->ranges[start + i];
-					
-				}
-				curr_scan = curr_scan / no_in_group;
-				//some sort of gap/average
-				//maybe averga in 3s, if average > max stop; if sharp change stop
-				if((curr_scan > (1 + range_diff)*prev_scan) || 
-				   (curr_scan < (prev_scan*range_diff)) ){
-					std::cout<<"sc["<<start<<"]: "<<curr_scan<<"\n";
-					std::cout<<"prev_scan: "<<prev_scan<<"\n";
-					return false;
-				}
-				
-				prev_scan = curr_scan;
-			}
-		}
-		
-		return true;
-	}
-}*/
-
 bool holdGoalObserve(geometry_msgs::Pose goal){
 
 	//ros::Rate snooze(0.5);
@@ -1032,9 +939,6 @@ bool borderCheck(int feature_index){
 	std::vector<geometry_msgs::Point> traj;
 	std::vector<geometry_msgs::Point>* traj_p = &traj;
 	goal = escapeWall(dir, 1);
-	//stuck_time = ros::Time::now().toSec();
-	//geometry_msgs::Point last_pos  = robot_pose.position;
-	//geometry_msgs::Point *last_pos_p  = &last_pos;
 	while(!finished){
 		closenessCheck(plan_tol);
 		if(featureCleared(active_feature)) finished = true;
@@ -1083,13 +987,8 @@ void continueOnPlan(){
 }
 
 void removeAroundFeatures(int feature_index){
-	/*for(int j = 0; j < feature_edges[feature_index].size(); j++){
-		std::cout<<"RMA feature_edges[feature_index]:"<<feature_edges[feature_index][j]<<"\n";
-	}*/
-
 	for(int i = 0; i < gl_->global_plan.poses.size(); i++){
 		if(withinBounds(gl_->global_plan.poses[i].pose.position, feature_edges[feature_index], 0.5)){
-			//std::cout<<"remove around :"<<gl_->global_plan.poses[i].pose.position<<"\n";
 			erasePlanPoint(i);
 			i--;
 		}
@@ -1328,9 +1227,6 @@ geometry_msgs::Pose firstWallGoal(std::string direction, geometry_msgs::Point ob
 			goal = gl_->rotatePose(goal, -7*pi/18); //70 deg CW
 		}else goal = gl_->rotatePose(goal, 7*pi/18);
 	}
-		
-	//std::cout<<"first wall goal: "<<goal.position<<"\n";
-	//std::cout<<"Z goal: "<<getZFromQuat(goal.orientation)<<"\n";
 	
 	return goal;
 }
@@ -1391,12 +1287,6 @@ void updateCostmap(nav_msgs::OccupancyGrid og){
 
 			if(count > margin_count_max){//min space btw points
 				count = 0;
-				/*if((i > row_count + 1) && (i < og.data.size() - row_count -1)){ //error block for firstand last row
-					if(og.data[i+1] < threshold || og.data[i-1] < threshold ||
-					   og.data[i + row_count] < threshold || og.data[i - row_count] < threshold){//either side of data
-						points_edge.push_back(point_out.point);
-					}
-				}*/
 				if(og.data[i] >= 99) points_edge.push_back(point_out.point);
 			}
 		
@@ -1407,16 +1297,7 @@ void updateCostmap(nav_msgs::OccupancyGrid og){
 	
 	obstacles = obstacle_points; 
 	edge_obstacles = points_edge;
-	//objects_map_p->updateMap(points_edge, active_feature);
 	matchFeatures();
-	//std::cout<<"features.size(): "<<features.size()<<"\n";
-	//std::cout<<"obstacles.size(): "<<obstacles.size()<<"\n";
-	//std::cout<<"edge_obstacles.size(): "<<edge_obstacles.size()<<"\n";
-	/*for(int i = 0; i < features.size(); i++){
-		for(int j = 0; j < features[i].size(); j++){
-			std::cout<<"f["<<i<<"]["<<j<<"]: "<<features[i][j]<<"\n";
-		}
-	}*/
 	
 	double finish_time =ros::Time::now().toSec();
 	if((finish_time - start_time) > 1){
@@ -1476,13 +1357,6 @@ void matchFeatures(){
 						}
 					}
 				}
-				//std::cout<<"insert and merge \n";
-				//std::cout<<"min feat["<<add_to[0]<<"]["<<pos_vec[0][0]<<"]: "<<features[add_to[0]][pos_vec[0][0]]<<"\n";
-				//std::cout<<"min feat["<<add_to[0]<<"]["<<pos_vec[0][1]<<"]: "<<features[add_to[0]][pos_vec[0][1]]<<"\n";
-				
-				//std::cout<<"merge To \n";
-				//std::cout<<"min feat["<<add_to[1]<<"]["<<pos_vec[1][0]<<"]: "<<features[add_to[1]][pos_vec[1][0]]<<"\n";
-				
 				for(int i3 = (add_to.size() - 1); i3 > 0; i3--){//only two; incase of scaling
 					//std::cout<<"double from pos_vec: "<<pos_vec[0]<<"\n";
 					if(sorted){
@@ -1494,42 +1368,17 @@ void matchFeatures(){
 					mergeFeatures(add_to[0], add_to[i3]);
 				}
 			}else{
-				//std::cout<<"from pos_vec: "<<pos_vec[0]<<"\n";
-				//std::cout<<"insert \n";
-				//std::cout<<"min feat["<<add_to[0]<<"]["<<pos_vec[0][0]<<"]: "<<features[add_to[0]][pos_vec[0][0]]<<"\n";
-				//std::cout<<"min feat["<<add_to[0]<<"]["<<pos_vec[0][1]<<"]: "<<features[add_to[0]][pos_vec[0][1]]<<"\n";
-		
 				if(sorted){
 					insertToFeature(add_to[0], edge_obstacles[i], pos_vec[0][0], pos_vec[0][1], pos_vec[0][2]);
 				}else{
 					addToFeature(add_to[0], edge_obstacles[i]);
 				}
-				//addToFeature(add_to[0], edge_obstacles[i]);
 			}			
 		}
 	}	
-	//std::cout<<"edge_obstacles.size(): "<<edge_obstacles.size()<<"\n";
-	//std::cout<<"features.size()"<<features.size()<<"\n";
-	//double edge_obs_end =ros::Time::now().toSec();
-	//std::cout<<"edge_obs time "<<ros::Time::now().toSec() - mf_strt_time<<"\n";
-	/*if(first_run){
-		std::cout<<"fist TIme #$%^&*() \n";
-		for(int i = 0; i < features.size(); i++){
-			for(int j = 0; j < features[i].size(); j++){
-				std::cout<<"1stt feature["<<i<<"]["<<j<<"]: "<<features[i][j]<<"\n";
-			}
-		}
-	}*/
+
 	if(first_run) first_run = false;
 	cm_count++;
-	/*if(cm_count == 2){
-		std::cout<<"2nd TIme #$%^&*() \n";
-		for(int i = 0; i < features.size(); i++){
-			for(int j = 0; j < features[i].size(); j++){
-				std::cout<<"2nd feature["<<i<<"]["<<j<<"]: "<<features[i][j]<<"\n";
-			}
-		}
-	}*/
 	int wall_out_id;
 	if(plan_points.size() > 0){
 		wall_out_id =  gl_->loop_sn[plan_points[0]];
@@ -1623,24 +1472,14 @@ bool closePoints(geometry_msgs::Point p1, geometry_msgs::Point p2, float margin)
 }
 
 void insertToFeature(int feat_index, geometry_msgs::Point point, int min_sn, int max_sn, int mid_sn){
-	//std::cout<<"try to insert: "<<point<<" \n";
-	//std::cout<<"btw min f["<<feat_index<<"]["<<min_sn<<"]: "<<features[feat_index][min_sn]<<" \n";
-	//std::cout<<"btw max f["<<feat_index<<"]["<<max_sn<<"]: "<<features[feat_index][max_sn]<<" \n";
 	bool ins = true;
-	//int loc_min = min_sn;
-	//float min_dis = std::abs(features[feat_index][min_sn].y - point.y);
 	for(int i = min_sn; i < (max_sn + 1); i++){
 		if(closePoints(features[feat_index][i], point, g_margin)){
 			ins = false;
 			//std::cout<<i<<" is close \n";
 			break;
 		}
-		/*if(std::abs(features[feat_index][i].y - point.y) < min_dis){
-			loc_min = i;
-		}*/
 	}
-	
-	//min_sn = loc_min;
 	
 	if(ins){
 		//std::cout<<"passed \n";
@@ -1685,7 +1524,6 @@ void insertToFeature(int feat_index, geometry_msgs::Point point, int min_sn, int
 }
 
 void addToFeature(int feat_index, geometry_msgs::Point point){
-	//std::cout<<"aTF \n";
 
 	int f_size = features[feat_index].size();
 
@@ -1710,21 +1548,17 @@ void addToFeature(int feat_index, geometry_msgs::Point point){
 			}
 		}
 	}else{
-		//std::cout<<"---- - sort Y \n";
 		int mid_sn, big_sn, small_sn;
 		big_sn = f_size - 1;
 		small_sn = 0;
 		bool y_sort = true;
-		//bool x_sort = true;
-		
+
 		if((point.y < features[feat_index][small_sn].y)){
 			y_sort = false;
-			//x_sort = false;
 			big_sn = small_sn;
 			mid_sn = small_sn;//not needed for now
 		}else if ((point.y > features[feat_index][big_sn].y)){
 			y_sort = false;
-			//x_sort = false;
 			small_sn = big_sn;
 			mid_sn = big_sn;//not needed for now
 		}
@@ -1768,32 +1602,9 @@ void addToFeature(int feat_index, geometry_msgs::Point point){
 		}
 		if(sm_bool) small_sn ++;
 		
-		/*std::cout<<"\n";
-		std::cout<<"features["<<feat_index<<"].size(): "<<features[feat_index].size()<<"\n";
-		std::cout<<"point: "<<point<<"\n";
-		std::cout<<"f["<<feat_index<<"]["<<big_sn<<"]: "<<features[feat_index][big_sn]<<"\n";
-		std::cout<<"f["<<feat_index<<"]["<<small_sn<<"]: "<<features[feat_index][small_sn]<<"\n";*/
-		
 		view = false;
-		/*while(x_sort){//sort by x
-			if((big_sn - small_sn) <= 1){
-				break;
-			}
-			mid_sn = (big_sn + small_sn) / 2;
-			
-			if(point.x < features[feat_index][mid_sn].x){
-				big_sn = mid_sn;
-			}else if(point.x > features[feat_index][mid_sn].x){
-				small_sn = mid_sn;
-			}else if(point.x == features[feat_index][mid_sn].x){
-				break;
-			}	
-		}*/
-		//mid_sn is always small_sn
-		//std::cout<<"mid_sn: "<<mid_sn<<"\n";
 		insertToFeature(feat_index, point, small_sn, big_sn, mid_sn);
 	}
-	//std::cout<<"out aTF \n";
 }
 
 void mergeFeatures(int feat_1, int feat_2){
@@ -1802,11 +1613,10 @@ void mergeFeatures(int feat_1, int feat_2){
 		addToFeature(feat_1, features[feat_2][k]);
 	}
 	features.erase(features.begin() + feat_2);
-	//std::cout<<"active_feature: "<<active_feature<<"\n";
-	//std::cout<<"feat_2: "<<feat_2<<"\n";
+
 	if(active_feature > feat_2) active_feature--;
 	updateLists(feat_2, feat_1);
-	//std::cout<<"merge end\n";
+
 }
 
 void updateLists(int index, int moved_to){
@@ -2066,27 +1876,6 @@ std::vector<int> possiblyInFeature(geometry_msgs::Point point, std::vector<std::
 						if(min_sn < 0) break;
 					}
 					if(sm_bool) min_sn ++;
-					//X sort
-					/*while((features[i][max_sn].x != features[i][min_sn].x) 
-						   && ((max_sn - min_sn) > 1)){
-						count++;
-
-						mid_sn = (max_sn + min_sn)/2;
-						if(point.x > features[i][mid_sn].x){
-							min_sn = mid_sn;
-						}else if (point.x < features[i][mid_sn].x){
-							max_sn = mid_sn;
-						}else{ //if equal
-							//min_sn = mid_sn;
-							//max_sn = mid_sn;
-							break;
-						}
-					}*/
-					//std::cout<<"count: "<<count<<"\n";
-					//std::cout<<"features["<<i<<"].size(): "<<features[i].size()<<"\n";
-					//use g_magin*2 bcs used in (isinfeature) and insertfeature
-					
-					//possibly in if within margin*2
 					bool ins = false;
 					for(int sn = min_sn; sn < (max_sn + 1); sn++){
 						if(closePoints(features[i][sn], point, g_margin)){
@@ -2102,8 +1891,6 @@ std::vector<int> possiblyInFeature(geometry_msgs::Point point, std::vector<std::
 							min_max.push_back(max_sn);
 							min_max.push_back(mid_sn);
 							pos_vec->push_back(min_max);
-							//std::cout<<"mid_sn: "<<mid_sn<<"\n";
-							//std::cout<<"max_sn: "<<max_sn<<"\n";
 					}	
 				}
 		}else{
@@ -2111,7 +1898,7 @@ std::vector<int> possiblyInFeature(geometry_msgs::Point point, std::vector<std::
 			for(int i1 = 0; i1 < features[i].size(); i1++){
 				if(pf.size() > 1) break;
 				if(closePoints(point, features[i][i1], g_margin)){
-					//std::cout<<"Break from small feat  \n";
+
 					//unsorted min_max wont be used
 					pf.push_back(i);
 					std::vector<int> min_max;
@@ -2127,8 +1914,6 @@ std::vector<int> possiblyInFeature(geometry_msgs::Point point, std::vector<std::
 					min_max.push_back(min_max[0]);
 					pos_vec->push_back(min_max);
 					
-					//std::cout<<"i1: "<<i1<<"\n";
-					//std::cout<<"i1+1: "<<i1+1<<"\n";
 					break;
 				}
 			}
@@ -2221,13 +2006,10 @@ bool obstacleOnPoint(geometry_msgs::Point p1, double margin){
 
 bool goToAction(geometry_msgs::Pose goal, int repeats){
 	int count = 0;
-	//stuck_time = ros::Time::now().toSec();
-	//geometry_msgs::Point last_pos  = robot_pose.position;
-	//geometry_msgs::Point *last_pos_p  = &last_pos;
+
 	
 	while(count < repeats){
 		if(goToAction(goal)) return true;
-		//if(stuck(last_pos_p, 7)) unStick(0.5, 1);
 		count ++;
 	}
 	return false;
@@ -2252,16 +2034,13 @@ bool goToAction(geometry_msgs::Pose goal){
 	
 	getOdom();
 	ros::Duration wait(0.1);
-	//stuck_time = ros::Time::now().toSec();
-	//geometry_msgs::Point last_pos  = robot_pose.position;
-	//geometry_msgs::Point *last_pos_p  = &last_pos;
 	float g_start = ros::Time::now().toSec();
 	double reset = 5;
 	while(!equalPose(goal, mb_robot_pose, xy_tol, orien_tol) && 
 		 !equalPose(goal, robot_pose, xy_tol, orien_tol)){	
 		updateCostmap(o_grid); //has a rosspin
 		closenessCheck(plan_tol);
-		//if(stuck(last_pos_p, 5)) unStick(1, 1);
+	
 		if(action_client.waitForResult(wait)){
 			if(action_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
 				std::cout<<"\n success \n";
@@ -2279,48 +2058,6 @@ bool goToAction(geometry_msgs::Pose goal){
 	return true;
 }
 
-/*bool goTo(geometry_msgs::Pose goal){
-
-	std::cout<<"goTo \n";
-	ros::Rate snooze(0.5);
-	if(!setBlindGoal(goal, 0)) ;
-	snooze.sleep();
-	int mb_status;
-	float t_start = ros::Time::now().toSec();
-	
-	getOdom();
-	geometry_msgs::Point last_pos  = robot_pose.position;
-	geometry_msgs::Point *last_pos_p  = &last_pos;
-	while(!equalPose(goal, robot_pose, xy_tol, orien_tol)){	
-		closenessCheck(plan_tol);
-		updateCostmap(o_grid);
-		//if(stuck(last_pos_p, 5)) unStick(1, 1);
-		if(obstacleOnPoint(goal.position)){//close should fix this
-			goal = findFree(goal);
-			setBlindGoal(goal, 0);
-			//snooze.sleep();
-			if(obstacleOnPoint(goal.position)){std::cout<<"goTo false \n"; return false;}
-			
-		}
-
-		if(goal_status_->status_list.size() > 0){
-			mb_status = goal_status_->status_list[goal_status_->status_list.size() - 1].status;
-		}
-		
-		if(mb_status == 4 || mb_status == 5 || mb_status == 9){
-			goal = findFree(goal);
-			setBlindGoal(goal, 0);
-			std::cout<<"goTo false \n";
-			return false;
-		}else if((mb_status == 3) && ((ros::Time::now().toSec() - t_start) > 5)){//Hot Fix
-			break; 
-		}
-		//snooze.sleep();
-	}
-	std::cout<<"goTo reached \n";
-	return true;
-}*/
-
 geometry_msgs::Pose translateLinear(geometry_msgs::Pose pose, double del_lin){
 	double z = getZFromQuat(pose.orientation);	
 	pose.position.x += del_lin*cos(z);
@@ -2328,55 +2065,6 @@ geometry_msgs::Pose translateLinear(geometry_msgs::Pose pose, double del_lin){
 
 	return pose;
 }
-
-/*void unStick(double clearance, double duration){
-
-	geometry_msgs::Twist vel;
-	vel.linear.x = safe_speed;
-	vel.angular.z = 0;
-	
-	double min_angle = -pi / 12; //-15 degrees
-	double max_angle = pi / 12; //15 degrees
-	int start_id = ((min_angle - scans->angle_min) / scans->angle_increment); 
-	int end_id = ((max_angle - scans->angle_min) / scans->angle_increment); 
-	bool front_clear = true;
-	int count = 0;
-	double start_time = ros::Time::now().toSec();
-	
-	while((ros::Time::now().toSec() - start_time) < duration){
-		ros::spinOnce();
-		if(front_clear){
-			for(int i = start_id; i != end_id; i++){ 
-				double angle = min_angle + (count * scans->angle_increment);
-				if(scans->ranges[i] < (clearance * sin(angle))){
-					vel.linear.x = 0;
-					cmd_publisher.publish(vel);
-					std::cout<<"front blocked at: "<<angle<<"\n";
-					front_clear = false;
-					break;
-				}
-				count ++;
-			}
-		}
-
-		if(front_clear){
-			cmd_publisher.publish(vel);
-		}else{
-
-			geometry_msgs::Point behind;
-			double bz = getZFromQuat(robot_pose.orientation);
-			behind.x = robot_pose.position.x + (clearance * cos(pi + bz));
-			behind.y = robot_pose.position.y + (clearance * sin(pi + bz));
-			
-			if(!obstacleOnMap(behind, robot_span/2)){ 
-				vel.linear.x = -1 * safe_speed;
-				cmd_publisher.publish(vel);
-			}else {std::cout<<"cant step back either \n"; break;}
-		}		
-	}
-	std::cout<<"out of unstick \n";
-
-}*/
 
 geometry_msgs::Pose escapeWall(std::string direction, double del_lin){
 	//Laser range greater than del_lin is considered traversable space
@@ -2393,9 +2081,6 @@ geometry_msgs::Pose escapeWall(std::string direction, double del_lin){
 	//double scan_segment = acos(((2*del_lin*del_lin) - (1.1 * robot_width * robot_width )) / (2*del_lin*del_lin)); 
 	 
 	int min_count = ( scan_segment / scans->angle_increment);
-	std::cout<<"\n scan_segment: "<<scan_segment<<"\n";
-	std::cout<<"robot_width: "<<robot_width<<"\n";
-	std::cout<<"del_lin: "<<del_lin<<"\n";
 	
 	//set range of used scans
 	double start_scan = -5*pi/12;
@@ -2404,10 +2089,6 @@ geometry_msgs::Pose escapeWall(std::string direction, double del_lin){
 	int ini = (start_scan - scans->angle_min)/ scans->angle_increment;
 	int max_index = ((end_scan - scans->angle_min) / scans->angle_increment);
 	int num_scans = (scans->angle_max - scans->angle_min)/ scans->angle_increment;
-	//std::cout<<"scans->angle_min: "<<scans->angle_min<<"\n";
-	//std::cout<<"scans->angle_increment: "<<scans->angle_increment<<"\n";
-	//std::cout<<"ini: "<<ini<<"\n";
-	std::cout<<"min_count: "<<min_count<<"\n";
 	
 	if((ini < 0) || ((max_index) > num_scans )){		
 		ROS_WARN("Requested scan out of range of laser Data, atleast 180 degrees required");
@@ -2437,20 +2118,14 @@ geometry_msgs::Pose escapeWall(std::string direction, double del_lin){
 			initial = true;
 		}
 	}
-	/*for(int t = 0; t < gaps.size(); t++){
-		std::cout<<"gaps["<<t<<"]: "<<gaps[t]<<"\n";
-	}*/
 
 	double wall_safe = inflation_angle;
-	//std::cout<<"/n gaps.size(): "<<gaps.size()<<"\n";
 	if(gaps.size() == 0){//rotate
 		if(direction == "left"){
 			goal = gl_->rotatePose(robot_pose, -pi/2);
 		}else{
 			goal = gl_->rotatePose(robot_pose, pi/2);
 		}
-		
-		std::cout<<"gap == 0 goal: "<<goal.position<<" \n";
 		return goal;
 	}else{
 		//where gap is the angle from -pi to pi robot frame
@@ -2475,31 +2150,19 @@ geometry_msgs::Pose escapeWall(std::string direction, double del_lin){
 			sn = gaps.size() - 1;
 		}
 		count = 0;
-		std::cout<<"gap.size(): "<<gaps.size()<<" \n";
-		std::cout<<"laser_align: "<<laser_align<<" \n";
 		while(count < gaps.size()){
 			double robot_z = getZFromQuat(robot_pose.orientation);
 			goal = gl_->rotatePose(robot_pose, laser_align*(gaps[sn] + wall_safe));//-ve bcs (+ve is ACW and vv)
 			goal = translateLinear(goal, del_lin);
-			std::cout<<"gaps["<<sn<<"]: "<<gaps[sn]<<" \n";
-			std::cout<<"mb_z: "<<robot_z<<" \n";
-			std::cout<<"rob pos: "<<robot_pose.position<<"\n \n";
-			
-			std::cout<<"goal_z: "<<getZFromQuat(goal.orientation)<<" \n";
-			std::cout<<"goal: "<<goal.position<<" \n";
 			
 			if(!obstacleOnPoint(goal.position)){
-				std::cout<<"accepted full \n";
-				//std::cout<<"ret goal: "<<goal.position<<"\n";
 				return goal;
 			}else if ((count >= gaps.size()/2) && (del_lin/2 > xy_tol)){
 				goal = translateLinear(goal, -0.4 * del_lin);
-				std::cout<<" 1/2: "<<goal.position<<" \n";
+
 				if(!obstacleOnPoint(goal.position)){
-					
-					//std::cout<<"ret half goal: "<<goal.position<<" \n";
 					return goal;
-				}//else std::cout<<"blckd @ gaps["<<i<<"]: "<<gaps[i]<<"\n";
+				}
 			}
 			if(increase) sn++;
 			else sn--;
