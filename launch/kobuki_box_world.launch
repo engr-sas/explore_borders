@@ -8,7 +8,7 @@
 	<arg name="namespace" default="robot_1"/>
 			  
 		
-	<arg name="world_name" value="$(find exp_devel)/worlds/box_world.world"/>
+	<arg name="world_name" value="$(find explore_borders)/worlds/box_world.world"/>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(arg world_name)"/> <!-- world_name is wrt GAZEBO_RESOURCE_PATH environment variable -->
     <arg name="paused" value="false"/>
@@ -25,7 +25,7 @@
 	<arg name="init_pose" value="-x 0.0 -y 0.0 -z 0.0"/>
 	</include>
 
-	<include file="$(find exp_devel)/launch/param/move_baseSafe.launch">
+	<include file="$(find explore_borders)/launch/param/move_baseSafe.launch">
 		 <arg name="move_base_name" value="$(arg move_base_name)"/>
 		<arg name="namespace" value="$(arg namespace)"/>
 		<arg name="gmap_topic" value="$(arg gmap_topic)"/>

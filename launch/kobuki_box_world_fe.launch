@@ -7,7 +7,7 @@
 	 <arg name="move_base_name" value="move_base"/>
 			  
 		
-	<arg name="world_name" value="$(find exp_devel)/worlds/box_world.world"/>
+	<arg name="world_name" value="$(find explore_borders)/worlds/box_world.world"/>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(arg world_name)"/> <!-- world_name is wrt GAZEBO_RESOURCE_PATH environment variable -->
     <arg name="paused" value="false"/>
@@ -22,7 +22,7 @@
 		<arg name="init_pose" value="-x 0.0 -y 0.0 -z 0.0"/>
 	</include>
 
-	<include file="$(find exp_devel)/launch/param/move_base_no_ns.launch">
+	<include file="$(find explore_borders)/launch/param/move_base_no_ns.launch">
 		 <arg name="move_base_name" value="$(arg move_base_name)"/>
 		<arg name="namespace" value=""/>
 		<arg name="gmap_topic" value="$(arg gmap_topic)"/>
@@ -31,7 +31,7 @@
 	</include> 
 
 	
-	<node name="laser_hot_fix" pkg="exp_devel" type="laser_hot_fix"  output="screen">
+	<node name="laser_hot_fix" pkg="explore_borders" type="laser_hot_fix"  output="screen">
 		<param name="max_range" value="6.0" />
 		<param name="sub_scan_topic" value="base_scan" />
 		<param name="pub_scan_topic" value="scan_fix" />
@@ -42,7 +42,7 @@
 		 <arg name="feedback_topic" value="move_base/feedback"/>
 	</include>
 	
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find exp_devel)/rviz/kobuki_fe.rviz">
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find explore_borders)/rviz/kobuki_fe.rviz">
 		<remap from="move_base_simple/goal" to="move_base_simple/goal"/>
 	</node>
 

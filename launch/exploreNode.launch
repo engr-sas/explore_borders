@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>	
 	 <param name="/use_sim_time" value="true" />
-	<node name="explore_node" pkg="exp_devel" type="explore_node"  output="screen">
+	<node name="explore_node" pkg="explore_borders" type="explore_node"  output="screen">
 		<param name="scan_topic" value="/scan_fix" />
 		<param name="laser_clockwise" value="true" />
 		<param name="clicked_point" value="/clicked_point" />
@@ -22,7 +22,7 @@
 		<param name="resolution" value="0.2" /> 	
 	</node>
 	
-	<node name="laser_hot_fix" pkg="exp_devel" type="laser_hot_fix"  output="screen">
+	<node name="laser_hot_fix" pkg="explore_borders" type="laser_hot_fix"  output="screen">
 		<param name="max_range" value="6.0" />
 		<param name="sub_scan_topic" value="scan" />
 		<param name="pub_scan_topic" value="scan_fix" />

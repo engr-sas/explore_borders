@@ -3,13 +3,13 @@
 	<include file="$(find rrt_exploration)/launch/single.launch" />
 	<!--<include file="$(find rrt_exploration_tutorials)/launch/single_simulated_house.launch" />-->
 	
-	<include file="$(find exp_devel)/launch/kobuki_box_world.launch" >
+	<include file="$(find explore_borders)/launch/kobuki_box_world.launch" >
 		<arg name="gmap_topic" value="scan_fix"/>
 		<arg name="gmap_maxUrange" value="5.5"/>
 		<arg name="gmap_maxRange" value="6.1"/>
 	</include>
 	
-	<node name="laser_hot_fix" pkg="exp_devel" type="laser_hot_fix"  output="screen">
+	<node name="laser_hot_fix" pkg="explore_borders" type="laser_hot_fix"  output="screen">
 		<param name="max_range" value="6.0" />
 		<param name="sub_scan_topic" value="robot_1/base_scan" />
 		<param name="pub_scan_topic" value="robot_1/scan_fix" />

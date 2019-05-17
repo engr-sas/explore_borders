@@ -1,5 +1,5 @@
 <launch>
-	<include file="$(find exp_devel)/launch/kobuki_box_world.launch" >
+	<include file="$(find explore_borders)/launch/kobuki_box_world.launch" >
 		<arg name="move_base_name" value="move_base"/>
 		<arg name="gmap_topic" value="scan_fix"/>
 		<arg name="gmap_maxUrange" value="5.5"/>

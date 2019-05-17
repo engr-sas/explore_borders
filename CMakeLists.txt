@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(exp_devel)
+project(explore_borders)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -41,7 +41,7 @@ find_package(catkin REQUIRED COMPONENTS
  
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES exp_devel
+#  LIBRARIES explore_borders
    CATKIN_DEPENDS  nav_core geometry_msgs message_generation  roscpp std_msgs rospy #actionlib #actionlib_msgs #nav_msgs #tf #visualization_msgs
 #  DEPENDS system_lib
 )

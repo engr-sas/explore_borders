@@ -2,16 +2,16 @@
 <launch>
 	<param name="/use_sim_time" value="true" />
 	
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find exp_devel)/rviz/empty_husky.rviz" output="screen"/>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find explore_borders)/rviz/empty_husky.rviz" output="screen"/>
 	
-	<!--<node name="laser_hot_fix" pkg="exp_devel" type="laser_hot_fix"  output="screen"/>-->
+	<!--<node name="laser_hot_fix" pkg="explore_borders" type="laser_hot_fix"  output="screen"/>-->
 	 
 	<include file="$(find husky_navigation)/launch/move_base.launch" />
 	
 	<include file="$(find husky_navigation)/launch/gmapping.launch" />	
 
 	<include file="$(find husky_gazebo)/launch/husky_empty_world.launch" >
-		   <arg name="world_name" value="$(find exp_devel)/worlds/box_world2.world"/>
+		   <arg name="world_name" value="$(find explore_borders)/worlds/box_world2.world"/>
 		   	<arg name="x_ini" value="0.0"/>
   			<arg name="y_ini" value="-20"/>
   			<arg name="z_ini" value="0.0"/>

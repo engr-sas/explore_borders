@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>	
-	<include file="$(find exp_devel)/launch/frontierExp.launch" />
-	<include file="$(find exp_devel)/launch/husky_box_world_fe.launch" />
+	<include file="$(find explore_borders)/launch/frontierExp.launch" />
+	<include file="$(find explore_borders)/launch/husky_box_world_fe.launch" />
 
 </launch>

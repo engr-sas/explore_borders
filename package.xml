@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>exp_devel</name>
+  <name>explore_borders</name>
   <version>0.0.0</version>
-  <description>The exp_devel package</description>
+  <description>The explore_borders package</description>
 
   <maintainer email="shamsudeensodangi@gmail.com">sas2</maintainer>
   <license>Boost Software License</license>
