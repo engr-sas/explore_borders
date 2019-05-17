@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>	
+	<include file="$(find exp_devel)/launch/exploreNode.launch" />
+	<include file="$(find exp_devel)/launch/husky_box_world.launch" />
+
+</launch>

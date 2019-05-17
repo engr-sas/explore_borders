@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>	
+	<include file="$(find exp_devel)/launch/rrt_node_husky.launch" />
+	<include file="$(find exp_devel)/launch/rrt_husky_box.launch" />
+
+</launch>

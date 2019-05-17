@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>	
+	<!--frontier frames check params-->
+	<include file="$(find exp_devel)/launch/frontierExp_kbk.launch" />
+	<include file="$(find exp_devel)/launch/kobuki_box_world_fe.launch" />
+</launch>
