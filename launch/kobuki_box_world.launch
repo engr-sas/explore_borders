@@ -1,32 +1,32 @@
 <?xml version="1.0"?>
 <launch>
 	<param name="/use_sim_time" value="true" />	
-	 <arg name="gmap_topic" default="base_scan"/>
+	
+	<arg name="gmap_topic" default="base_scan"/>
 	<arg name="gmap_maxUrange" default="50"/>
-	 <arg name="gmap_maxRange" default="50"/>
-	 <arg name="move_base_name" default="move_base_node"/>
+	<arg name="gmap_maxRange" default="50"/>
+	<arg name="move_base_name" default="move_base_node"/>
 	<arg name="namespace" default="robot_1"/>
-			  
-		
-	<arg name="world_name" value="$(find explore_borders)/worlds/box_world.world"/>
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(arg world_name)"/> <!-- world_name is wrt GAZEBO_RESOURCE_PATH environment variable -->
-    <arg name="paused" value="false"/>
-    <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="true"/>
-    <arg name="headless" value="false"/>
-    <arg name="debug" value="false"/>
-	 
-  </include>
+	<arg name="world_name" default="$(find explore_borders)/worlds/box_world.world"/>
+	<arg name="init_pose" default="-x 0.0 -y 0.0 -z 0.0"/>
+  
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+    	<arg name="world_name" value="$(arg world_name)"/> <!-- world_name is wrt GAZEBO_RESOURCE_PATH environment variable -->
+    	<arg name="paused" value="false"/>
+    	<arg name="use_sim_time" value="true"/>
+    	<arg name="gui" value="true"/>
+    	<arg name="headless" value="false"/>
+    	<arg name="debug" value="false"/> 
+	</include>
 
 	<group ns="/robot_1">
 	<include file="$(find rrt_exploration_tutorials)/launch/includes/robot.launch.xml">
-	<arg name="robot_name" value="robot_1"/>
-	<arg name="init_pose" value="-x 0.0 -y 0.0 -z 0.0"/>
+		<arg name="robot_name" value="robot_1"/>
+		<arg name="init_pose" value="$(arg init_pose)"/>
 	</include>
 
 	<include file="$(find explore_borders)/launch/param/move_baseSafe.launch">
-		 <arg name="move_base_name" value="$(arg move_base_name)"/>
+		<arg name="move_base_name" value="$(arg move_base_name)"/>
 		<arg name="namespace" value="$(arg namespace)"/>
 		<arg name="gmap_topic" value="$(arg gmap_topic)"/>
 		<arg name="gmap_maxUrange" value="$(arg gmap_maxUrange)"/>

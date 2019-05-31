@@ -1105,7 +1105,6 @@ void orderToBeExplored(){
 }
 
 bool setBlindGoal(geometry_msgs::Pose goal_in, double rate){
-	std::cout<<"sBG -";
 	t_now =ros::Time::now().toSec();
 	double t_diff = t_now - last_time;
 	if(t_diff >= rate){
@@ -1116,7 +1115,7 @@ bool setBlindGoal(geometry_msgs::Pose goal_in, double rate){
 		goal.header.stamp = ros::Time::now();
 		goal.pose = goal_in;
 		goal_publisher.publish(goal);
-		std::cout<<"gpub -";
+
 		int mb_status;
 
 		ros::spinOnce();
@@ -2143,10 +2142,8 @@ geometry_msgs::Pose escapeWall(std::string direction, double del_lin){
 		
 		int sn;
 		if(increase){
-			std::cout<<"left on husky \n";
 			sn = 0;
 		}else{
-			std::cout<<"right on husky \n";	
 			sn = gaps.size() - 1;
 		}
 		count = 0;

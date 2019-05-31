@@ -12,7 +12,7 @@
 		<param name="map_topic" value="robot_1/map" />
 		<param name="odom_frame" value="robot_1/odom" />
 		<param name="odom_topic" value="robot_1/odom" />
-		<param name="use_odom" value="false" />
+		<param name="use_odom" value="true" />
 		<param name="clear_dist" value="1" />
 		<param name="scan_segment" value="0.2" />
 		<param name="vertices" value="4" />

@@ -1,8 +1,12 @@
-<launch>
+<?xml version="1.0"?>
+<launch>	
 	<include file="$(find explore_borders)/launch/kobuki_box_world.launch" >
 		<arg name="move_base_name" value="move_base"/>
 		<arg name="gmap_topic" value="scan_fix"/>
 		<arg name="gmap_maxUrange" value="5.5"/>
 		<arg name="gmap_maxRange" value="6.1"/>
+		<arg name="world_name" value="$(find explore_borders)/worlds/box_world.world"/>
 	</include>
+	
+	<include file="$(find explore_borders)/launch/exp_kobuki_exp.launch" />
 </launch>

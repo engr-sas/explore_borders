@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<launch>	
-	<!-- traces back to rrt_exploration_tutorials)/launch/includes/move_baseSafe.launch" -->
-	<!-- which tracks to rrt_exploration_tutorials)/param/local" -->
-	<include file="$(find explore_borders)/launch/kobuki_box_world_for_exp.launch" />
-	<include file="$(find explore_borders)/launch/exp_kobuki_exp.launch" />
-</launch>
